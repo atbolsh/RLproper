@@ -1,0 +1,21 @@
+Make a good class for doing MC in general.
+
+Make it work for the blackjack problem, and solve it completely; print out the graph.
+
+Look at gridworlds and tree searches too; see how \epsilon affects performance.
+
+~~~~~~~~
+
+Modify for TD(0).
+
+Find a situation where simple TD(0) (without backups and the like) fails relative to MC, doesn't back up far enough.
+
+Redo with TD(n), compare. Work way through. Use those 2 problems, as well as "windy" and "cliffy" gridworlds. Make gridworld easy with objects.
+
+Implement double-q learning to avoid traps.
+
+~~~~~~~~~~~~~
+
+Moving on, work through last chapter. Point where stuck: 8.4. No time yet to think about all implications of different "time since update" q modifications; code this up and work with it.
+
+
