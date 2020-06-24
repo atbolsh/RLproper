@@ -1,6 +1,7 @@
 import numpy as np
 
 def vnu(cards):
+    """Value and whether or not there is a usable ace."""
     s = 0
     aces = 0
     for card in cards:
@@ -20,6 +21,8 @@ def vnu(cards):
 
 
 class Deck:
+    """Standard 52 card deck, draws without replacement."""
+
     def __init__(self):
         self.reset()
 
@@ -41,6 +44,8 @@ class Deck:
 
 
 class InfiniDeck(Deck):
+    """Draws with replacement"""
+
     def deal(self):
         return np.random.choice(self.cards) 
     
@@ -151,12 +156,14 @@ class PHES(Player):
         return a
 
     def move(self, deck, a = 'b'):
+        """Move is optional; allows one to seed a first action."""
         while a != 's':
             if a == 'h':
                 self.hit(deck)
             a = self.decide()
        
     def learn(self, reward):
+        """Use of self.trace in order to change Q-values."""
         for x in self.trace:
             a = x[1]
             i, j, k = x[0][0], x[0][1], x[0][2]
