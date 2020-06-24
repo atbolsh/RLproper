@@ -24,7 +24,7 @@ class Deck:
         self.reset()
 
     def reset(self):
-        normals = [str(x) for x in range(2, 10)]
+        normals = [str(x) for x in range(2, 11)]
         faces = ['10' for x in range(3)]
         aces = ['A']
         
@@ -71,10 +71,23 @@ class PHES(Player):
     """Player Hand, Exploring Starts"""
     def __init__(self):
         Player.__init__(self)
-        self.hitQ = np.random.randn(2, 10, 10)
-        self.stickQ = np.random.randn(2, 10, 10)
+        self.hitQ = np.zeros((2, 10, 10))
+        self.stickQ = np.zeros((2, 10, 10))
         self.hitN = np.zeros((2, 10, 10))
         self.stickN = np.zeros((2, 10, 10))
+        self.startTable()
+
+    def startTable(self):
+        """Initially, jealously sticks"""
+        for i in range(2):
+            for j in range(10):
+                for k in range(9):
+                    self.hitQ[i, j, k] = 1
+                    self.stickQ[i, j, k]= -1
+                self.hitQ[i, j, 9] = -1
+                self.stickQ[i, j, 9] = 1
+        self.hitN += 100
+        self.stickN += 100
     
     def reset(self):
         Player.reset(self)

@@ -2,18 +2,24 @@ from blackjack import *
 
 def game(p1, p2):
     d = Deck()
+    ## Initial conditions
     p1.reset()
     p2.reset()
+    ## Dealing
     p1.hit(d)
     p2.hit(d)
     p1.hit(d)
     p2.hit(d)
+    ## Looking at the one card
     p1.visible = p2.cards[0]
     p2.visible = p1.cards[0]
+    ## each one gets hit until done.
     p1.move(d)
     p2.move(d)
+    ## Evaluation
     v1, _ = vnu(p1.cards)
     v2, _ = vnu(p2.cards)
+    ## Report results
     print(p1.cards)
     print(p2.cards)
     if v1 > v2:
