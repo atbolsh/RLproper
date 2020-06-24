@@ -19,3 +19,11 @@ Implement double-q learning to avoid traps.
 Moving on, work through last chapter. Point where stuck: 8.4. No time yet to think about all implications of different "time since update" q modifications; code this up and work with it.
 
 
+
+========================================
+
+
+MC for simple case is done.
+Next, do TD(0), compare to MC on simple gridworld, as well as on tree search.
+
+MAKE PROPER TD(0) AND MC CLASS.

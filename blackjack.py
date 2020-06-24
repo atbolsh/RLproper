@@ -38,6 +38,11 @@ class Deck:
         n = len(self.cards)
         i = np.random.randint(0, n)
         return self.cards.pop(i)
+
+
+class InfiniDeck(Deck):
+    def deal(self):
+        return np.random.choice(self.cards) 
     
 
 class Player:
@@ -86,8 +91,8 @@ class PHES(Player):
                     self.stickQ[i, j, k]= -1
                 self.hitQ[i, j, 9] = -1
                 self.stickQ[i, j, 9] = 1
-        self.hitN += 100
-        self.stickN += 100
+        #self.hitN += 100
+        #self.stickN += 100
     
     def reset(self):
         Player.reset(self)
@@ -129,20 +134,23 @@ class PHES(Player):
         k = v - 12
         return i, j, k
 
-    def move(self, deck, exploring = True):
-        self.trace = []
-        if exploring:
-            i, j, k = self.inds()
-            if i < 0:
-                a = 'h'
-            else:
-                if np.random.random() < 0.5:
-                    a = 's'
-                else:
-                    a = 'h'
-                self.trace.append(((i, j, k), a))
+    def exploringStart(self):
+        i = np.random.randint(0, 2)
+        j = np.random.randint(0, 10)
+        k = np.random.randint(0, 10)
+        a = np.random.choice(['s', 'h'])
+        if j == 0:
+            self.visible = 'A'
         else:
-            a = 'b' # Dummy initial value
+            self.visible = str(j + 1)
+        if i == 0:
+            self.cards = [str(k + 12)]
+        else:
+            self.cards = [str(k + 1), 'A']
+        self.trace.append(((i, j, k), a))
+        return a
+
+    def move(self, deck, a = 'b'):
         while a != 's':
             if a == 'h':
                 self.hit(deck)
