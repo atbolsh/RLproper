@@ -1,18 +1,25 @@
 import numpy as np
 
-class SERSA:
+class QL:
     
     def __init__(self, initial = str((0, 0)), gamma = 1.0, alpha = 0.5, eps=0.1):
         self.initial = initial
-        self.reset()
+        self.current = initial
         self.eps = eps
         self.alpha = alpha
         self.gamma = gamma
-        self.Q = {'EndEnd':0}
+        self.Q1 = {'EndEnd':0}
+        self.Q2 = {'EndEnd':0}
+        self.Q = self.Q1
+        self.nQ = self.Q2
     
+    def switchQs(self):
+        temp = self.Q
+        self.Q = self.nQ
+        self.Q = temp
+   
     def reset(self):
         self.current = self.initial
-        self.nextAction = None
     
     def lookup(self, state, action):
         if state == 'End':
@@ -34,44 +41,33 @@ class SERSA:
                 inds.append(i)
         return inds
     
-    def greedyAction(self, env, state=None):
-        if type(state) == type(None):
-            state = self.current
-        actions = env.actions(state)
-        v = [self.lookup(state, action) for action in actions]
+    def greedyAction(self, env):
+        actions = env.actions(self.current)
+        v = [self.lookup(self.current, action) for action in actions]
         inds = self.inclusiveArgMax(v)
         ind = np.random.choice(inds)
         return actions[ind]
 
-    def exploringAction(self, env, state=None):
-        if type(state) == type(None):
-            state = self.current
-        actions = env.actions(state)
+    def exploringAction(self, env):
+        actions = env.actions(self.current)
         return np.random.choice(actions)
     
-    def action(self, env, state=None):
-        if type(state) == type(None):
-            state = self.current
-
-        if np.random.random() < self.eps:
-            a = self.exploringAction(env, state)
-        else:
-            a = self.greedyAction(env, state)
-        return a
-    
     def move(self, env):
-        
-        if type(self.nextAction) == type(None):
-            self.nextAction = self.action(env)
-        a = self.nextAction
+        if np.random.random() < self.eps:
+            a = self.exploringAction(env)
+        else:
+            a = self.greedyAction(env)
         
         newState, R = env.move(self.current, a) 
 
-        self.nextAction = self.action(env, newState)
-        newQ = self.lookup(newState, self.nextAction)
+        newActions = env.actions(newState)
+        ind = np.argmax(np.array([self.lookup(newState, action) for action in newActions]))
+        action = newAction[ind]
+        self.switchQs()
+        newMaxQ = self.lookup(newState, action)
         
         key = self.current + a
-        self.Q[key] = self.Q[key] + self.alpha*(R + (self.gamma*newQ) - self.Q[key])
+        self.Q[key] = self.Q[key] + self.alpha*(R + (self.gamma*newMaxQ) - self.Q[key])
         
         self.current = newState
        
