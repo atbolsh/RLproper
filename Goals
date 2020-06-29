@@ -1,29 +1,15 @@
-Make a good class for doing MC in general.
+Next steps are straightforward.
 
-Make it work for the blackjack problem, and solve it completely; print out the graph.
+Play with background planning using DynaQ and DynaQ+. Do the maze thing with both.
+Do problem 8.4 for programming (the proposal won't work because the agent won't 
+"see the path" towards the unexplored item).
 
-Look at gridworlds and tree searches too; see how \epsilon affects performance.
+Implement a priority-sweeping Queueeueueu.
 
-~~~~~~~~
+Remake the simple diagram that shows advantages and disadvantages of on-policy updates / implement Real-Time Dynamic Programming.
 
-Modify for TD(0).
+Try to implement / play with just one Monte Carlo Tree Search situation. Download code if necessary.
+DO AT LEAST ONE thing with Decision-Time planning.
 
-Find a situation where simple TD(0) (without backups and the like) fails relative to MC, doesn't back up far enough.
+After all that is done, move on to part II.
 
-Redo with TD(n), compare. Work way through. Use those 2 problems, as well as "windy" and "cliffy" gridworlds. Make gridworld easy with objects.
-
-Implement double-q learning to avoid traps.
-
-~~~~~~~~~~~~~
-
-Moving on, work through last chapter. Point where stuck: 8.4. No time yet to think about all implications of different "time since update" q modifications; code this up and work with it.
-
-
-
-========================================
-
-
-MC for simple case is done.
-Next, do TD(0), compare to MC on simple gridworld, as well as on tree search.
-
-MAKE PROPER TD(0) AND MC CLASS.
