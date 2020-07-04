@@ -1,22 +1,34 @@
 import numpy as np
 from copy import deepcopy
 
-class DynaQ:
+class DynaQPlus:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.0, planSteps = 10):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.0, planSteps = 50, kappa=0.2):
         self.initial = initial
         self.current = initial
         self.eps = eps
+        self.kappa = kappa
         self.alpha = alpha
         self.gamma = gamma
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
+        self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
    
     def reset(self):
         self.current = self.initial
+    
+    def traversedLookup(self, key):
+        if key=='EndEnd':
+            return 0
+        try:
+            tau = self.traversed[key]
+        except KeyError:
+            tau = 0
+            self.traversed[key] = tau
+        return tau
     
     def Qlookup(self, state, action):
         if state == 'End':
@@ -104,12 +116,18 @@ class DynaQ:
         actions = self.getEnvActions(env)
         return np.random.choice(actions)
     
-    def updateQ(self, state, action, newState, reward, newActions):
+    def updateQ(self, state, action, newState, reward, newActions, real=False):
         newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
         key = state + action
         currentQ = self.Qlookup(state, action)
         self.Q[key] = currentQ + self.alpha*(reward + self.gamma*newMaxQ - currentQ)
-    
+        if real:
+            self.traversedLookup(key)
+            self.traversed[key] = 0
+            for k in self.traversed.keys():
+                if k != key:
+                    self.traversed[k] += 1
+      
     def selectState(self):
         return np.random.choice(self.actions.keys())
     
@@ -121,8 +139,9 @@ class DynaQ:
         action = self.selectAction(state)
         newState = self.SModelLookup(state, action)
         R = self.RModelLookup(state, action)
+        tau = self.traversedLookup(state + action)
         newActions = self.actionLookup(newState) # No env. interaction here.
-        self.updateQ(state, action, newState, R, newActions)
+        self.updateQ(state, action, newState, R + self.kappa*np.sqrt(tau), newActions)
     
     def move(self, env):
         if np.random.random() < self.eps:
@@ -133,7 +152,7 @@ class DynaQ:
         newState, R = self.makeEnvMove(env, a) 
         newActions = self.getEnvActions(env, newState)
 
-        self.updateQ(self.current, a, newState, R, newActions)
+        self.updateQ(self.current, a, newState, R, newActions, True)
 
         self.current = newState
 
