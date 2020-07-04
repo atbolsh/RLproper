@@ -22,9 +22,12 @@ class TreeBackup:
         if state == 'End':
             return 0
         key = state + action
-        if key not in self.Q.keys():
-            self.Q[key] = 0
-        return self.Q[key]
+        try:
+            q = self.Q[key]
+        except KeyError:
+            q = 0
+            self.Q[key] = q
+        return q
     
     def inclusiveArgMax(self, l):
         M = -1000000

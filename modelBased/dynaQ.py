@@ -3,7 +3,7 @@ from copy import deepcopy
 
 class dynaQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 1.0, alpha = 0.5, eps=0.1, planSteps = 0):
+    def __init__(self, initial = str((0, 0)), gamma = 1.0, alpha = 0.5, eps=0.1, planSteps = 10):
         self.initial = initial
         self.current = initial
         self.eps = eps
@@ -12,8 +12,8 @@ class dynaQ:
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
         self.actions = {'End':['End']}
-        self.Smodel = {'EndEnd':'End'}
-        self.Rmodel = {'EndEnd':0}
+        self.SModel = {'EndEnd':'End'}
+        self.RModel = {'EndEnd':0}
    
     def reset(self):
         self.current = self.initial
@@ -22,41 +22,54 @@ class dynaQ:
         if state == 'End':
             return 0
         key = state + action
-        if key not in self.Q.keys():
-            self.Q[key] = 0
-        return self.Q[key]
-    
+        try:
+            q = self.Q[key]
+        except KeyError:
+            q = 0
+            self.Q[key] = q
+        return q
+   
     def actionLookup(self, state):
         if state == 'End':
             return ['End']
-        if state not in self.actions.keys():
-            self.actions[state] = ['dummy']
-        return self.actions[state]
+        try:
+            a = self.actions[state]
+        except KeyError:
+            a = ['dummy']
+            self.actions[state] = a
+        return a
     
-    def SmodelLookup(self, state, action):
+    def SModelLookup(self, state, action):
         if state == 'End':
             return 'End'
         key = state + action
-        if key not in self.Smodel.keys():
-            Smodel[key] = state #Initialized as self-return
-        return Smodel[key]
-    
+        try:
+            s = self.SModel[key]
+        except KeyError:
+            s = state
+            self.SModel[key] = state
+        return s
+
+    def RModelLookup(self, state, action):
+        if state == 'End':
+            return 0
+        key = state + action
+        try:
+            r = self.RModel[key]
+        except KeyError:
+            r = 0
+            self.RModel[key] = r
+        return r
+   
     def getEnvActions(self, env, state=None):
         if type(state) == type(None):
             state = self.current
         actions = env.actions(state)
         self.actions[state] = deepcopy(actions)
-        inSModel = self.Smodel.keys()
-        inRModel = self.Rmodel.keys()
-        inQ = self.Q.keys()
-        for a in actions:
-            key = state + a
-            if key not in inSModel: 
-                self.Smodel[key] = state #Initialized as return to original.
-            if key not in inQ:
-                self.Q[key] = 0 #Initialized at 0.
-            if key not in inRModel:
-                self.RModel[key] = 0 #Initialized at 0.
+        for a in actions: #Initialize values with defualts with a lookup.
+            self.RModelLookup(state, a)
+            self.SModelLookup(state, a)
+            self.Qlookup(state, a) 
         return actions
     
     def makeEnvMove(self, env, action, state=None):
@@ -110,6 +123,7 @@ class dynaQ:
         R = self.RModelLookup(state, action)
         newActions = self.actionLookup(newState) # No env. interaction here.
         self.updateQ(state, action, newState, R, newActions)
+        print(R)
     
     def move(self, env):
         if np.random.random() < self.eps:
@@ -117,7 +131,7 @@ class dynaQ:
         else:
             a = self.greedyAction(env)
         
-        newState, R = self.makeEnvMove(a) 
+        newState, R = self.makeEnvMove(env, a) 
         newActions = self.getEnvActions(env, newState)
 
         self.updateQ(self.current, a, newState, R, newActions)
