@@ -1,22 +1,34 @@
 import numpy as np
 from copy import deepcopy
 
-class DynaQ:
+class AlternateDQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.0, planSteps = 50):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.1, planSteps = 50, kappa=0.05):
         self.initial = initial
         self.current = initial
         self.eps = eps
+        self.kappa = kappa
         self.alpha = alpha
         self.gamma = gamma
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
+        self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
    
     def reset(self):
         self.current = self.initial
+    
+    def traversedLookup(self, key):
+        if key=='EndEnd':
+            return 0
+        try:
+            tau = self.traversed[key]
+        except KeyError:
+            tau = 0
+            self.traversed[key] = tau
+        return tau
     
     def Qlookup(self, state, action):
         if state == 'End':
@@ -95,7 +107,9 @@ class DynaQ:
     
     def greedyAction(self, env):
         actions = self.getEnvActions(env)
-        v = [self.Qlookup(self.current, action) for action in actions]
+        qs = [self.Qlookup(self.current, action) for action in actions]
+        taus = [self.traversedLookup(self.current + action) for action in actions]
+        v = [qs[i] + self.kappa*np.sqrt(taus[i]) for i in range(len(actions))]
         inds = self.inclusiveArgMax(v)
         ind = np.random.choice(inds)
         return actions[ind]
@@ -104,12 +118,18 @@ class DynaQ:
         actions = self.getEnvActions(env)
         return np.random.choice(actions)
     
-    def updateQ(self, state, action, newState, reward, newActions):
+    def updateQ(self, state, action, newState, reward, newActions, real=False):
         newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
         key = state + action
         currentQ = self.Qlookup(state, action)
         self.Q[key] = currentQ + self.alpha*(reward + self.gamma*newMaxQ - currentQ)
-    
+        if real:
+            self.traversedLookup(key)
+            self.traversed[key] = 0
+            for k in self.traversed.keys():
+                if k != key:
+                    self.traversed[k] += 1
+      
     def selectState(self):
         return np.random.choice(self.actions.keys())
     
@@ -133,7 +153,7 @@ class DynaQ:
         newState, R = self.makeEnvMove(env, a) 
         newActions = self.getEnvActions(env, newState)
 
-        self.updateQ(self.current, a, newState, R, newActions)
+        self.updateQ(self.current, a, newState, R, newActions, True)
 
         self.current = newState
 

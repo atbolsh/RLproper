@@ -1,0 +1,1 @@
+Basically, the problem with action-selection time tau addition is that you cannot plan to reach the better value. You rely on being RIGHT NEXT TO IT. In order to make this discovery method work, one must have an absurdly high kappa (1.5) which hurts normal exploitation.
