@@ -37,6 +37,24 @@ class Walled():
         if state == 'End':
             return ['End']
         return ['l', 'r', 'd', 'u']
+    
+    def getQs(self, agent):
+        result = np.zeros((self.height, self.length))
+        for x in range(self.length):
+            for y in range(self.height):
+                state = str((x, y))
+                actions = self.actions(state)
+                vs = [float('-inf')]
+                for a in actions:
+                    key = state + a
+                    try:
+                        vs.append(agent.Q[key])
+                    except KeyError:
+                        pass
+                q = max(vs)
+                t = self.coords2position(x, y)
+                result[t[0], t[1]] = q
+        return result
                 
     def move(self, state, action):
         """Give a state str(y0, x0), and an action, finds the next state and reward and returns."""

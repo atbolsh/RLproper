@@ -3,7 +3,7 @@ from copy import deepcopy
 
 class AlternateDQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.1, planSteps = 50, kappa=0.05):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.1, planSteps = 50, kappa=1.5): #Need higher kappa to work
         self.initial = initial
         self.current = initial
         self.eps = eps
