@@ -19,13 +19,13 @@ class PriorityQ:
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
         self.seenFrom = {'End':set([])}
-        self.priority = {'EndEnd':float('-inf')}
+        self.priority = {'EndEnd':0}
    
     def reset(self):
         self.current = self.initial
     
     def topPriority(self):
-        M = float('-inf')
+        M = -1
         s = 'EndEnd'
         l = self.priority.items()
         for t in l:
@@ -38,7 +38,7 @@ class PriorityQ:
         try:
             p = self.priority[key]
         except KeyError:
-            p = float('-inf')
+            p = 0
             self.priority[key] = p
         return p 
     
@@ -132,7 +132,7 @@ class PriorityQ:
         return newState, R        
     
     def inclusiveArgMax(self, l):
-        M = -1000000
+        M = float('-inf')
         inds = []
         for i in range(len(l)):
             v = l[i]
@@ -166,6 +166,8 @@ class PriorityQ:
             self.traversed[key] = 0
             for k in self.traversed.keys():
                 if k != key:
+                    tau = self.traversed[k]
+                    self.priority[k] = self.priorityLookup(k) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
                     self.traversed[k] += 1
       
     def selectState(self):
@@ -181,7 +183,6 @@ class PriorityQ:
         else:
             return key[:-1], key[-1]
    
-    ## MAKE THIS MAKE SENSE/Have good calls! 
     def updateTopQ(self):
         key = self.topPriority()
 
@@ -198,7 +199,7 @@ class PriorityQ:
         p = reward + self.gamma*newMaxQ - currentQ
         self.Q[key] = currentQ + self.alpha*p
         
-        self.priority[key] = float('-inf')
+        self.priority[key] = 0
        
         allAs = self.actionLookup(state) 
         allQs = [self.Qlookup(state, a) for a in allAs]
@@ -229,7 +230,7 @@ class PriorityQ:
        
         return a, R
 
-    def run(self, env, steps=1000, reset=True):
+    def run(self, env, steps=3000, reset=True):
         if reset:
             self.reset()
             self.current = env.initial()
