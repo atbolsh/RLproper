@@ -1,45 +1,54 @@
 import numpy as np
 from copy import deepcopy
 
-### FIXE ME!! Should work with Walled, just like DQPlus
+## Files ueue and ueueue have two old implementations.
+## ueue has no wasteful operations, but it is slower.
+## 
+## ueueue has wasteful updates (old priorities not discarded), but is much faster; set theta and maxLen correctly for it.
+## 
+## myMaxUpdates integrates the best of both worlds, with no duplication but also a proper, fast maxHeap. This is what we use now.
+import myMaxHeap as mhp
 
-class PriorityQ:
+class PriorityQPlus:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 50, kappa=0.05):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, expSteps = None, theta = 0.0, kappa=0.1):
         self.initial = initial
         self.current = initial
         self.eps = eps
-        self.kappa = kappa
         self.alpha = alpha
         self.gamma = gamma
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
-        self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
+        self.uniqueStates = ['End']
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
         self.seenFrom = {'End':set([])}
-        self.priority = {'EndEnd':0}
-   
+        self.priority = mhp.Queue(theta = theta)
+        self.timestamp = 0
+        self.traversed = {'EndEnd':0}
+        self.kappa = kappa
+        if type(expSteps) == type(None):
+            self.expSteps = self.planSteps
+  
     def reset(self):
         self.current = self.initial
-    
-    def topPriority(self):
-        M = -1
-        s = 'EndEnd'
-        l = self.priority.items()
-        for t in l:
-            if t[1] > M:
-                s = t[0]
-                M = t[1]
-        return s
-    
+
+    def traversedLookup(self, key):
+        if key=='EndEnd':
+            return 0
+        try:
+            t = self.traversed[key]
+        except KeyError:
+            t = self.timestamp
+            self.traversed[key] = t
+        return t
+      
     def priorityLookup(self, key):
         try:
-            p = self.priority[key]
+            p = self.priority.d[key]
         except KeyError:
             p = 0
-            self.priority[key] = p
         return p 
     
     def seenLookup(self, state):
@@ -56,17 +65,7 @@ class PriorityQ:
         except KeyError:
             l = set([prior])
             self.seenFrom[state] = l
-    
-    def traversedLookup(self, key):
-        if key=='EndEnd':
-            return 0
-        try:
-            tau = self.traversed[key]
-        except KeyError:
-            tau = 0
-            self.traversed[key] = tau
-        return tau
-    
+        
     def Qlookup(self, state, action):
         if state == 'End':
             return 0
@@ -86,6 +85,7 @@ class PriorityQ:
         except KeyError:
             a = ['z'] # Dummy value
             self.actions[state] = a
+            self.uniqueStates.append(state)
         return a
     
     def SModelLookup(self, state, action):
@@ -114,6 +114,7 @@ class PriorityQ:
         if type(state) == type(None):
             state = self.current
         actions = env.actions(state)
+        self.actionLookup(state) # To intialize, esp. uniqueStates
         self.actions[state] = deepcopy(actions)
         for a in actions: #Initialize values with defualts with a lookup.
             self.RModelLookup(state, a)
@@ -153,30 +154,30 @@ class PriorityQ:
     def exploringAction(self, env):
         actions = self.getEnvActions(env)
         return np.random.choice(actions)
-    
-    def updatePriority(self, state, action, newState, reward, newActions, real=False):
-        newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
-        key = state + action
-        currentQ = self.Qlookup(state, action)
-        p = reward + self.gamma*newMaxQ - currentQ
-        self.priority[key] = abs(p)
-#        self.Q[key] = currentQ + self.alpha*p
-        if real:
-            self.traversedLookup(key)
-            self.traversed[key] = 0
-            for k in self.traversed.keys():
-                if k != key:
-                    tau = self.traversed[k]
-                    self.priority[k] = self.priorityLookup(k) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
-#                    s, a = self.SAfromKey(k)
-#                    self.Q[k] = self.Qlookup(s, a) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
-                    self.traversed[k] += 1
-      
+       
     def selectState(self):
-        return np.random.choice(self.actions.keys())
+        return np.random.choice(self.uniqueStates) 
     
     def selectAction(self, state):
         return np.random.choice(self.actionLookup(state))
+   
+    def updateRandomPriority(self):
+        s = self.selectState()
+        a = self.selectAction(s)
+        newState = self.SModelLookup(s, a)
+        R = self.RModelLookup(s, a)
+        newActions = self.actionLookup(newState)
+        self.updatePriority(s, a, newState, R, newActions)
+    
+    def updatePriority(self, state, action, newState, reward, newActions, real=False):
+        key = state + action
+        if real:
+            self.traversed[key] = self.timestamp
+        tau = self.timestamp - self.traversedLookup(key)
+        newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
+        currentQ = self.Qlookup(state, action)
+        p = abs(reward + self.kappa*np.sqrt(tau) + self.gamma*newMaxQ - currentQ)
+        self.priority.push(key, p)
 
     def SAfromKey(self, key):
         ## Hacky, but it really helps. Only configured right now for gridworlds; will change in other cases.
@@ -186,14 +187,17 @@ class PriorityQ:
             return key[:-1], key[-1]
    
     def updateTopQ(self):
-        key = self.topPriority()
+        t = self.priority.pop()
+        key = t[0]
+        if not key:
+            return None
+
+        tau = self.timestamp - self.traversedLookup(key)
 
         state, action = self.SAfromKey(key) 
         newState = self.SModelLookup(state, action)
-        R = self.RModelLookup(state, action)
-        tau = self.traversedLookup(state + action)
+        reward = self.RModelLookup(state, action) + self.kappa*np.sqrt(tau)
         newActions = self.actionLookup(newState) # No env. interaction here.
-        reward = R + self.kappa*np.sqrt(tau)
 
         newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
         key = state + action
@@ -201,18 +205,16 @@ class PriorityQ:
         p = reward + self.gamma*newMaxQ - currentQ
         self.Q[key] = currentQ + self.alpha*p
         
-        self.priority[key] = 0
-       
         allAs = self.actionLookup(state) 
         allQs = [self.Qlookup(state, a) for a in allAs]
         mq = max(allQs)
         for k in self.seenLookup(state):
+            tauK = self.timestamp - self.traversed[k]
             s, a = self.SAfromKey(k)
-            tauK = self.traversedLookup(s + a)
             Rk = self.RModelLookup(s, a) + self.kappa*np.sqrt(tauK)
             Qk = self.Qlookup(s, a)
             Pk = abs(Rk + self.gamma*mq - Qk)
-            self.priority[k] = Pk
+            self.priority.push(k, Pk)
     
     def move(self, env):
         if np.random.random() < self.eps:
@@ -226,6 +228,9 @@ class PriorityQ:
         self.updatePriority(self.current, a, newState, R, newActions, True)
 
         self.current = newState
+
+        for i in range(self.expSteps):
+            self.updateRandomPriority()
 
         for i in range(self.planSteps):
             self.updateTopQ()       
@@ -248,5 +253,22 @@ class PriorityQ:
             stateTrace.append(self.current)
         
         return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
+    
+    def episode(self, env, cutoff = 5, reset=True):
+        if reset:
+            self.reset()
+            self.current = env.initial()
 
- 
+        stateTrace = [self.current]
+        actionTrace = []
+        rewardTrace = []
+        R = -1
+        
+        while R < cutoff:
+            a, R = self.move(env)
+            actionTrace.append(a)
+            rewardTrace.append(R)
+            stateTrace.append(self.current)
+        
+        return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
+

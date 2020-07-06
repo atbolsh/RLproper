@@ -15,6 +15,7 @@ class DynaQPlus:
         self.timestamp = 0
         self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
+        self.uniqueStates = []
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
    
@@ -50,6 +51,7 @@ class DynaQPlus:
         except KeyError:
             a = ['dummy']
             self.actions[state] = a
+            self.uniqueStates.append(state)
         return a
     
     def SModelLookup(self, state, action):
@@ -78,6 +80,7 @@ class DynaQPlus:
         if type(state) == type(None):
             state = self.current
         actions = env.actions(state)
+        self.actionLookup(state) # To intialize, esp. uniqueStates
         self.actions[state] = deepcopy(actions)
         for a in actions: #Initialize values with defualts with a lookup.
             self.RModelLookup(state, a)
@@ -126,7 +129,7 @@ class DynaQPlus:
             self.traversed[key] = self.timestamp
       
     def selectState(self):
-        return np.random.choice(self.actions.keys())
+        return np.random.choice(self.uniqueStates) 
     
     def selectAction(self, state):
         return np.random.choice(self.actionLookup(state))

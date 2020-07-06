@@ -1,3 +1,3 @@
 from priorityQ import *
-#from priorityQplus import *
+from priorityQplus import *
 
