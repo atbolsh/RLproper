@@ -2,6 +2,9 @@ import numpy as np
 from copy import deepcopy
 import heapq as hq
 
+## Wasteful implementation that slows learning down; use myMaxHeap instead.
+## If slow, add in maxLen idea from here
+
 def bubble_up(h, ind):
     if ind == 0:
         return None

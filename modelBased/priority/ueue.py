@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
+## Bad, slow implementation; use myMaxHeap instead
 
 class Ueue:
     def __init__(self, theta=0.0001, maxLen = 5000):

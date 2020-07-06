@@ -1,15 +1,17 @@
 import numpy as np
 from copy import deepcopy
 
-## Files ueue and ueueue have two implementations.
+## Files ueue and ueueue have two old implementations.
 ## ueue has no wasteful operations, but it is slower.
 ## 
 ## ueueue has wasteful updates (old priorities not discarded), but is much faster; set theta and maxLen correctly for it.
-import ueueue as ue
+## 
+## myMaxUpdates integrates the best of both worlds, with no duplication but also a proper, fast maxHeap. This is what we use now.
+import myMaxHeap as mhp
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.01, maxLen = 512):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.0):
         self.initial = initial
         self.current = initial
         self.eps = eps
@@ -21,7 +23,7 @@ class PriorityQ:
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
         self.seenFrom = {'End':set([])}
-        self.priority = ue.Ueue(theta = theta, maxLen = maxLen)
+        self.priority = mhp.Queue(theta = theta)
    
     def reset(self):
         self.current = self.initial
