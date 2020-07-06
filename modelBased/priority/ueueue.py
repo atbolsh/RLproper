@@ -2,6 +2,16 @@ import numpy as np
 from copy import deepcopy
 import heapq as hq
 
+def bubble_up(h, ind):
+    if ind == 0:
+        return None
+    root = int((ind-1)/2)
+    if h[ind] < h[root]:
+        temp = h[root]
+        h[root] = h[ind]
+        h[ind] = temp
+        bubble_up(h, root)
+
 class Ueue:
     def __init__(self, theta=0.001, maxLen = 5000):
         self.theta = theta
@@ -28,20 +38,23 @@ class Ueue:
             return -1
 
         if len(self.h) >= self.maxLen:
-            v = 0 - self.h[ -np.random.randint(1, int(self.maxLen/2) - 1) ] # Not just last, to prevent "blocking" element
+            ind = len(self.h) - np.random.randint(1, int(self.maxLen/2))
+            v = 0 - self.h[ ind ] # Not just last, to prevent "blocking" element
             if val < v:
                 return -1
-            v = 0 - self.h.pop() # NOT heappop; last, least important element
             self.remOne(v)
+            self.h[ind] = - val
+            bubble_up(self.h, ind)
+        else:
+            hq.heappush(self.h, 0 - val)
 
         try:
             self.dvk[val].append(key)
         except KeyError:
             self.dvk[val] = [key] 
-            
-        hq.heappush(self.h, 0 - val)
-    
+                
     def isEmpty(self):
         return (len(self.h) == 0)
+
 
 
