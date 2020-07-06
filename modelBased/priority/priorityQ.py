@@ -9,7 +9,7 @@ import ueueue as ue
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.01, maxLen = 500):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.01, maxLen = 512):
         self.initial = initial
         self.current = initial
         self.eps = eps

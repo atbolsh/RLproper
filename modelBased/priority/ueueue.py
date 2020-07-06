@@ -13,7 +13,7 @@ def bubble_up(h, ind):
         bubble_up(h, root)
 
 class Ueue:
-    def __init__(self, theta=0.001, maxLen = 5000):
+    def __init__(self, theta=0.001, maxLen = 4096):
         self.theta = theta
         self.h = [] #Ordered list of priorities
         self.dvk = {}
