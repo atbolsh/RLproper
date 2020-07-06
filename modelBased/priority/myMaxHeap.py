@@ -85,19 +85,9 @@ class Queue:
                 return self.mintrace_child(k)
  
     def pop(self):
-#        print('pop')
-#        print('----------')
-#        print(self.h)
-#        print(self.dkv)
-#        print(self.inds)
-#        print('\n\n')
-
         try:
             res = self.h[0]
         except IndexError: # Empty heap
-#            print(self.h)
-#            print(self.dkv)
-#            print(self.inds)
             res = ('', float('-inf'))
         
         try:
@@ -126,12 +116,8 @@ class Queue:
         t = (key, val) # New tuple
         ind = self.inds[key]
 
-#        try:        
         c = self.rightmost_child(ind) # Could be others; think!
         self.switch(ind, c)
-#        except IndexError:
-#            print(c)
-#            print(ind)
         self.h[c] = ('', float('-inf')) # Put in dummy val for now
         self.bubble_down(ind)
 
@@ -142,13 +128,6 @@ class Queue:
         self.dkv[key] = val
 
     def push(self, key, val):
-#        print('push\n' + key + '\t\t' + str(val))
-#        print('----------')
-#        print(self.h)
-#        print(self.dkv)
-#        print(self.inds)
-#        print('\n\n')
-
         if val < self.theta:
             return None
         try:
