@@ -5,16 +5,14 @@ from copy import deepcopy
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 50, kappa=0.05):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10):
         self.initial = initial
         self.current = initial
         self.eps = eps
-        self.kappa = kappa
         self.alpha = alpha
         self.gamma = gamma
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
-        self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
@@ -56,17 +54,7 @@ class PriorityQ:
         except KeyError:
             l = set([prior])
             self.seenFrom[state] = l
-    
-    def traversedLookup(self, key):
-        if key=='EndEnd':
-            return 0
-        try:
-            tau = self.traversed[key]
-        except KeyError:
-            tau = 0
-            self.traversed[key] = tau
-        return tau
-    
+        
     def Qlookup(self, state, action):
         if state == 'End':
             return 0
@@ -160,17 +148,6 @@ class PriorityQ:
         currentQ = self.Qlookup(state, action)
         p = reward + self.gamma*newMaxQ - currentQ
         self.priority[key] = abs(p)
-#        self.Q[key] = currentQ + self.alpha*p
-        if real:
-            self.traversedLookup(key)
-            self.traversed[key] = 0
-            for k in self.traversed.keys():
-                if k != key:
-                    tau = self.traversed[k]
-                    self.priority[k] = self.priorityLookup(k) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
-#                    s, a = self.SAfromKey(k)
-#                    self.Q[k] = self.Qlookup(s, a) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
-                    self.traversed[k] += 1
       
     def selectState(self):
         return np.random.choice(self.actions.keys())
@@ -190,10 +167,8 @@ class PriorityQ:
 
         state, action = self.SAfromKey(key) 
         newState = self.SModelLookup(state, action)
-        R = self.RModelLookup(state, action)
-        tau = self.traversedLookup(state + action)
+        reward = self.RModelLookup(state, action)
         newActions = self.actionLookup(newState) # No env. interaction here.
-        reward = R + self.kappa*np.sqrt(tau)
 
         newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
         key = state + action
@@ -208,8 +183,7 @@ class PriorityQ:
         mq = max(allQs)
         for k in self.seenLookup(state):
             s, a = self.SAfromKey(k)
-            tauK = self.traversedLookup(s + a)
-            Rk = self.RModelLookup(s, a) + self.kappa*np.sqrt(tauK)
+            Rk = self.RModelLookup(s, a)
             Qk = self.Qlookup(s, a)
             Pk = abs(Rk + self.gamma*mq - Qk)
             self.priority[k] = Pk
@@ -248,5 +222,22 @@ class PriorityQ:
             stateTrace.append(self.current)
         
         return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
+    
+    def episode(self, env, cutoff = 5, reset=True):
+        if reset:
+            self.reset()
+            self.current = env.initial()
 
- 
+        stateTrace = [self.current]
+        actionTrace = []
+        rewardTrace = []
+        R = -1
+        
+        while R < cutoff:
+            a, R = self.move(env)
+            actionTrace.append(a)
+            rewardTrace.append(R)
+            stateTrace.append(self.current)
+        
+        return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
+

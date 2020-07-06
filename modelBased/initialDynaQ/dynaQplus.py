@@ -176,6 +176,24 @@ class DynaQPlus:
         
         return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
 
+    def episode(self, env, cutoff = 5, reset=True):
+        if reset:
+            self.reset()
+            self.current = env.initial()
+
+        stateTrace = [self.current]
+        actionTrace = []
+        rewardTrace = []
+        R = -1
+        
+        while R < cutoff:
+            a, R = self.move(env)
+            actionTrace.append(a)
+            rewardTrace.append(R)
+            stateTrace.append(self.current)
+        
+        return sum(rewardTrace), stateTrace, actionTrace, rewardTrace
+
 
 
 
