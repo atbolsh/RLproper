@@ -1,11 +1,10 @@
 import numpy as np
 from copy import deepcopy
-
-### FIXE ME!! Should work with Walled, just like DQPlus
+import ueue as ue
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.0001):
         self.initial = initial
         self.current = initial
         self.eps = eps
@@ -17,27 +16,16 @@ class PriorityQ:
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
         self.seenFrom = {'End':set([])}
-        self.priority = {'EndEnd':0}
+        self.priority = ue.Ueue(theta = theta)
    
     def reset(self):
         self.current = self.initial
-    
-    def topPriority(self):
-        M = -1
-        s = 'EndEnd'
-        l = self.priority.items()
-        for t in l:
-            if t[1] > M:
-                s = t[0]
-                M = t[1]
-        return s
-    
+       
     def priorityLookup(self, key):
         try:
-            p = self.priority[key]
+            p = self.priority.d[key]
         except KeyError:
             p = 0
-            self.priority[key] = p
         return p 
     
     def seenLookup(self, state):
@@ -146,8 +134,8 @@ class PriorityQ:
         newMaxQ = max([self.Qlookup(newState, a) for a in newActions])
         key = state + action
         currentQ = self.Qlookup(state, action)
-        p = reward + self.gamma*newMaxQ - currentQ
-        self.priority[key] = abs(p)
+        p = abs(reward + self.gamma*newMaxQ - currentQ)
+        self.priority.add(key, p)
       
     def selectState(self):
         return np.random.choice(self.actions.keys())
@@ -163,7 +151,10 @@ class PriorityQ:
             return key[:-1], key[-1]
    
     def updateTopQ(self):
-        key = self.topPriority()
+        t = self.priority.pop()
+        key = t[0]
+        if not key:
+            return None
 
         state, action = self.SAfromKey(key) 
         newState = self.SModelLookup(state, action)
@@ -176,8 +167,6 @@ class PriorityQ:
         p = reward + self.gamma*newMaxQ - currentQ
         self.Q[key] = currentQ + self.alpha*p
         
-        self.priority[key] = 0
-       
         allAs = self.actionLookup(state) 
         allQs = [self.Qlookup(state, a) for a in allAs]
         mq = max(allQs)
@@ -186,7 +175,7 @@ class PriorityQ:
             Rk = self.RModelLookup(s, a)
             Qk = self.Qlookup(s, a)
             Pk = abs(Rk + self.gamma*mq - Qk)
-            self.priority[k] = Pk
+            self.priority.add(k, Pk)
     
     def move(self, env):
         if np.random.random() < self.eps:
