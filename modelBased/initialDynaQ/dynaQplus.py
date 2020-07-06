@@ -12,6 +12,7 @@ class DynaQPlus:
         self.gamma = gamma
         self.planSteps = planSteps
         self.Q = {'EndEnd':0}
+        self.timestamp = 0
         self.traversed = {'EndEnd':0}
         self.actions = {'End':['End']}
         self.SModel = {'EndEnd':'End'}
@@ -24,11 +25,11 @@ class DynaQPlus:
         if key=='EndEnd':
             return 0
         try:
-            tau = self.traversed[key]
+            t = self.traversed[key]
         except KeyError:
-            tau = 0
-            self.traversed[key] = tau
-        return tau
+            t = 0
+            self.traversed[key] = t
+        return t
     
     def Qlookup(self, state, action):
         if state == 'End':
@@ -123,10 +124,7 @@ class DynaQPlus:
         self.Q[key] = currentQ + self.alpha*(reward + self.gamma*newMaxQ - currentQ)
         if real:
             self.traversedLookup(key)
-            self.traversed[key] = 0
-            for k in self.traversed.keys():
-                if k != key:
-                    self.traversed[k] += 1
+            self.traversed[key] = self.timestamp
       
     def selectState(self):
         return np.random.choice(self.actions.keys())
@@ -139,11 +137,12 @@ class DynaQPlus:
         action = self.selectAction(state)
         newState = self.SModelLookup(state, action)
         R = self.RModelLookup(state, action)
-        tau = self.traversedLookup(state + action)
+        tau = self.timestamp - self.traversedLookup(state + action)
         newActions = self.actionLookup(newState) # No env. interaction here.
         self.updateQ(state, action, newState, R + self.kappa*np.sqrt(tau), newActions)
     
     def move(self, env):
+        self.timestamp += 1
         if np.random.random() < self.eps:
             a = self.exploringAction(env)
         else:

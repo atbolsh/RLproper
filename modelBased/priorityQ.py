@@ -1,11 +1,11 @@
 import numpy as np
 from copy import deepcopy
 
-### FIXED ME!! Should work with Walled, just like DQPlus
+### FIXE ME!! Should work with Walled, just like DQPlus
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.5, eps=0.1, planSteps = 50, kappa=0.05):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 50, kappa=0.05):
         self.initial = initial
         self.current = initial
         self.eps = eps
@@ -168,6 +168,8 @@ class PriorityQ:
                 if k != key:
                     tau = self.traversed[k]
                     self.priority[k] = self.priorityLookup(k) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
+#                    s, a = self.SAfromKey(k)
+#                    self.Q[k] = self.Qlookup(s, a) + self.kappa*(np.sqrt(tau + 1) - np.sqrt(tau))
                     self.traversed[k] += 1
       
     def selectState(self):
@@ -207,7 +209,7 @@ class PriorityQ:
         for k in self.seenLookup(state):
             s, a = self.SAfromKey(k)
             tauK = self.traversedLookup(s + a)
-            Rk = self.RModelLookup(s, a) + self.kappa*np.sqrt(tau)
+            Rk = self.RModelLookup(s, a) + self.kappa*np.sqrt(tauK)
             Qk = self.Qlookup(s, a)
             Pk = abs(Rk + self.gamma*mq - Qk)
             self.priority[k] = Pk
