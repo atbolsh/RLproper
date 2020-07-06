@@ -3,7 +3,7 @@ from copy import deepcopy
 import heapq as hq
 
 class Ueue:
-    def __init__(self, theta=0.0001, maxLen = 5000):
+    def __init__(self, theta=0.001, maxLen = 5000):
         self.theta = theta
         self.h = [] #Ordered list of priorities
         self.dvk = {}
@@ -27,11 +27,11 @@ class Ueue:
         if val < self.theta:
             return -1
 
-        if len(self.h) == self.maxLen:
-            v = 0 - self.h[-1]
+        if len(self.h) >= self.maxLen:
+            v = 0 - self.h[ -np.random.randint(1, int(self.maxLen/2) - 1) ] # Not just last, to prevent "blocking" element
             if val < v:
                 return -1
-            self.h.pop() # NOT heappop; last, least important element
+            v = 0 - self.h.pop() # NOT heappop; last, least important element
             self.remOne(v)
 
         try:
