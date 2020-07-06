@@ -3,7 +3,7 @@ from copy import deepcopy
 
 
 class Ueue:
-    def __init__(self, theta=0.0001):
+    def __init__(self, theta=0.0001, maxLen = 5000):
         self.theta = theta
         self.l = [] #Ordered list of stuff.
         self.d = {}
@@ -67,7 +67,7 @@ class Ueue:
         except KeyError:
             return None
     
-    def add(self, key, val):
+    def push(self, key, val):
         if val < self.theta:
             return -1
 

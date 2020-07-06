@@ -1,10 +1,10 @@
 import numpy as np
 from copy import deepcopy
-import ueue as ue
+import ueueue as ue
 
 class PriorityQ:
     
-    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.0001):
+    def __init__(self, initial = str((0, 0)), gamma = 0.9, alpha = 0.9, eps=0.1, planSteps = 10, theta = 0.0001, maxLen = 5000):
         self.initial = initial
         self.current = initial
         self.eps = eps
@@ -16,7 +16,7 @@ class PriorityQ:
         self.SModel = {'EndEnd':'End'}
         self.RModel = {'EndEnd':0}
         self.seenFrom = {'End':set([])}
-        self.priority = ue.Ueue(theta = theta)
+        self.priority = ue.Ueue(theta = theta, maxLen = maxLen)
    
     def reset(self):
         self.current = self.initial
@@ -135,7 +135,7 @@ class PriorityQ:
         key = state + action
         currentQ = self.Qlookup(state, action)
         p = abs(reward + self.gamma*newMaxQ - currentQ)
-        self.priority.add(key, p)
+        self.priority.push(key, p)
       
     def selectState(self):
         return np.random.choice(self.actions.keys())
@@ -175,7 +175,7 @@ class PriorityQ:
             Rk = self.RModelLookup(s, a)
             Qk = self.Qlookup(s, a)
             Pk = abs(Rk + self.gamma*mq - Qk)
-            self.priority.add(k, Pk)
+            self.priority.push(k, Pk)
     
     def move(self, env):
         if np.random.random() < self.eps:
