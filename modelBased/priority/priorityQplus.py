@@ -217,6 +217,8 @@ class PriorityQPlus:
             self.priority.push(k, Pk)
     
     def move(self, env):
+        self.timestamp += 1
+
         if np.random.random() < self.eps:
             a = self.exploringAction(env)
         else:
