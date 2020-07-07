@@ -1,4 +1,5 @@
-3) Test PQP. If no luck, MOVE ON.
- 
-4) Move on to Real-Time Dynamic Programming.
+
+
+4) Move on to Real-Time Dynamic Programming and Trajectory Sampling. Redo the computaton time graph, but using b=1 only 
+(no need to have stochastic environments, not yet)
 
