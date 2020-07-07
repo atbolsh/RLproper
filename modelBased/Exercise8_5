@@ -1,0 +1,10 @@
+Models in Stochastic and Changing Environments.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Instead of a single state looked up via state-action pair, you have a dictionary of seen stuff, with weights.
+
+Simplest case is counts.
+
+More complex case, for environment that might change, whenever its updated, you discount by rate**tau (time since seen). 
+That way, the past is not an insurmountable barrier to change.
