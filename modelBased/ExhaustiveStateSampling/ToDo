@@ -13,3 +13,8 @@ especially thanks to the Queue+ algorithm which I developed (by mashing 2 simple
 It would be fairly easy to implement / test both of these (by copying other model-based agents from this folder), 
 and reproduce figure 8.8 from section 8.6, but all the concepts are intuitive. 
 This is left as an exercise to any reader of this document.
+
+~~~~~~~~
+
+Also, all forward-focusing goes here, too; that's basically just trajectory sampling from all available actions, 
+in order to better determine their actual value.
