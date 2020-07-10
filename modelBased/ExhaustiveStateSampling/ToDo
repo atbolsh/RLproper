@@ -1,0 +1,15 @@
+Note
+~~~~~~~~~
+
+This folder was intended to store some methods which sweep through the state/action space regularly in order to make the Q function lead naturally to objectives as it should.
+
+Specifically, Real-time dynamic programming, which performs full sweeps, and trajectory sampling, which uses the model to simulate trajectories, learning the Q function 
+very well near the states (actions) frequently visited.
+
+
+I decided against this due to lack ot time, and the fact that I feel I already got a decent amount of intuition for using models to update Q functions regularly, 
+especially thanks to the Queue+ algorithm which I developed (by mashing 2 simple ideas together) and which worked.
+
+It would be fairly easy to implement / test both of these (by copying other model-based agents from this folder), 
+and reproduce figure 8.8 from section 8.6, but all the concepts are intuitive. 
+This is left as an exercise to any reader of this document.
